@@ -1,0 +1,4 @@
+#cmakedefine USE_LIBPMEM
+#cmakedefine USE_CLWB
+#cmakedefine USE_CLFLUSHOPT
+#cmakedefine USE_CLFLUSH
