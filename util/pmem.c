@@ -7,7 +7,7 @@
 #include "util/pmem.h"
 #include "config.h"
 
-#ifdef USE_CLWB
+#if defined(USE_CLWB)
     #define myflush(addr, len)      _mm_clwb((addr))
     #define myfence()               _mm_sfence()
     static const char* flush_method = "clwb";
