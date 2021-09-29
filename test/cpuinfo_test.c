@@ -1,7 +1,7 @@
 #undef NDEBUG
 
 #include <stdio.h>
-#include "util/cpuinfo.h"
+#include "util/uarch.h"
 
 int main(void) {
     int ncores, nthreads, hyper_threading;

@@ -1,11 +1,15 @@
-#include <libpmem.h>
-#include <x86intrin.h>
-#include <stdio.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include "util/pmem.h"
+#include <x86intrin.h>
+#include <libpmem.h>
+#include "util/mapping.h"
 #include "config.h"
+
+extern void mmap_init(struct MapInfo* map);
+extern void mmap_fini(struct MapInfo* map);
+extern void libpmem_init(struct MapInfo* map);
+extern void libpmem_fini(struct MapInfo* map);
 
 #if defined(USE_CLWB)
     #define myflush(addr, len)      _mm_clwb((addr))
@@ -46,26 +50,33 @@
     static_assert(0, "cannot find CLWB/CLFLUSHOPT/CLFLUSH instruction!");
 #endif
 
-void pmem_init(struct pmem_ctx* ctx) {
-    // remove pmem file
-    char cmd_buf[1024];
-    sprintf(cmd_buf, "rm -rf %s", ctx->file_path);
-    system(cmd_buf);
+void map_init(struct MapInfo* map) {
+    map->flush_method = (char*)malloc(strlen(flush_method) + 1);
+    map->fence_method = (char*)malloc(strlen(fence_method) + 1);
+    strcpy(map->flush_method, flush_method);
+    strcpy(map->fence_method, flush_method);
 
-    ctx->pmem_addr = pmem_map_file(ctx->file_path, ctx->file_size + ctx->align,
-                                   PMEM_FILE_CREATE | PMEM_FILE_EXCL,
-                                   0666, &ctx->mapped_len, &ctx->is_pmem);
-    if (ctx->pmem_addr == NULL) {
-        perror("pmem_map_file");
-        exit(1);
+    switch (map->map_type) {
+    case MAP_TYPE_LIBPMEM:
+        libpmem_init(map);
+        break;
+    case MAP_TYPE_MMAP:
+        mmap_init(map);
+        break;
+    default:
+        assert(0);
     }
-
-    ctx->flush_method = (char*)malloc(strlen(flush_method) + 1);
-    ctx->fence_method = (char*)malloc(strlen(fence_method) + 1);
-    strcpy(ctx->flush_method, flush_method);
-    strcpy(ctx->fence_method, flush_method);
 }
 
-void pmem_fini(struct pmem_ctx* ctx) {
-    pmem_unmap(ctx->pmem_addr, ctx->mapped_len);
+void map_fini(struct MapInfo* map) {
+    switch (map->map_type) {
+    case MAP_TYPE_LIBPMEM:
+        libpmem_fini(map);
+        break;
+    case MAP_TYPE_MMAP:
+        mmap_fini(map);
+        break;
+    default:
+        assert(0);
+    }
 }

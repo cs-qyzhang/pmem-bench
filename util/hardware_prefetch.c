@@ -31,7 +31,7 @@
 
 #include <sys/syscall.h>
 
-#include "util/cpuinfo.h"
+#include "util/uarch.h"
 
 static int open_msr(int core) {
     char msr_filename[BUFSIZ];

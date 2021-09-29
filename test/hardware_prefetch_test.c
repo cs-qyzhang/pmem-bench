@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "util/hardware_prefetch.h"
+#include "util/uarch.h"
 
 int main(void) {
     disable_prefetch_all();
